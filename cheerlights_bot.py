@@ -52,7 +52,6 @@ color_pick_hex = {
     "#00FFFF": "cyan",
     "#FFFFFF": "white",
     "#FDF5E6": "oldlace",
-    "#FDF5E6": "warmwhite",
     "#800080": "purple",
     "#FF00FF": "magenta",
     "#FFFF00": "yellow",
