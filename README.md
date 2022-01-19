@@ -39,7 +39,17 @@ Note that it takes a couple of days to get your app approved.
 * Do not set as public bot (you only want this on servers you are in)
 * Save Settings
 * Click OAuth2 and then URL Generator
-* For Scopes Choose Administrator
+* Click OAuth2 and then URL Generator
+* For Scope Choose bot
+* For Permissions, choose the following:
+    - Under General Permissions:
+        - Read Messages/View Channels
+    - Under Text Permissions:
+        - Send messages
+        - Send Messages in threads
+        - Embed Links
+        - Read message History
+        - Use Slash Commands
 * Copy the generated URL
 * Paste it into a browser window Address bar
 * Choose the Server you want to authorize it to and then click authorize.
