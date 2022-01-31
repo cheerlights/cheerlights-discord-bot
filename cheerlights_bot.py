@@ -2,8 +2,8 @@
 
 # CheerLights Discord Server Bot
 # Developed by: Jeff Lehman, N8ACL
-# Date: 12/22/2021
-# Current Version: 1.0
+# Date: 01/30/2022
+# Current Version: 1.1
 # https://github.com/cheerlights/cheerlights-discord-bot
 
 # Questions? Comments? Suggestions? Contact me one of the following ways:
@@ -45,21 +45,7 @@ twitter = tweepy.API(auth)
 cheerlights_api_url = 'http://api.thingspeak.com/channels/1417/field/2/last.json'
 linefeed = "\r\n"
 
-color_pick_hex = {
-    "#FF0000": "red",
-    "#008000": "green",
-    "#0000FF": "blue",
-    "#00FFFF": "cyan",
-    "#FFFFFF": "white",
-    "#FDF5E6": "oldlace",
-    "#800080": "purple",
-    "#FF00FF": "magenta",
-    "#FFFF00": "yellow",
-    "#FFA500": "orange",
-    "#FFC0CB": "pink"
-}
-
-color_pick_name = {
+color_pick = {
     "red" : "#FF0000",
     "green" : "#008000",
     "blue" : "#0000FF",
@@ -73,34 +59,38 @@ color_pick_name = {
     "pink" : "#FFC0CB"
 }
 
-valid_color_list = """
-    red
-    green
-    blue
-    cyan
-    white
-    oldlace
-    purple
-    magenta
-    yellow
-    orange
-    pink
-"""
-
-
 #############################
 # Define Functions
 
 def use_api():
+    # Pulls latest Color from Cheerlights API
+
     r = requests.get(cheerlights_api_url, timeout=None)
     json = r.json()
     return json['field2']
 
 def hex_to_rgb(col_hex):
-    """Convert a hex colour to an RGB tuple."""
+    #Convert a hex colour to an RGB tuple.
+
     col_hex = col_hex.lstrip('#')
     return bytearray.fromhex(col_hex)
 
+def get_key(val, my_dict):
+    # Return the Key from a value in a dictionary
+
+    for key, value in my_dict.items():
+         if val == value:
+             return key
+
+def valid_colors():
+    # Returns list of valid colors
+
+    valid_colors = ''
+
+    for item in list(color_pick.keys()):
+        valid_colors = valid_colors + item + linefeed
+
+    return valid_colors
 
 #############################
 # Define Discord Bot Functions
@@ -117,25 +107,25 @@ async def get_color(ctx, color = 'none'):
         r, g, b = hex_to_rgb(color_code)
 
         embed = discord.Embed(title = "Current CheerLights Color",
-            description=color_pick_hex[color_code.upper()],
+            description= get_key(color_code.upper(),color_pick),
             colour=discord.Color.from_rgb(r,g,b)
         )
-        # await ctx.send(embed = embed)
+
     elif color == 'list':
+
         embed = discord.Embed(title = "Valid CheerLights Colors",
-        description=valid_color_list
+        description=valid_colors()
         )
-        #await ctx.send(embed = embed)
+
     else:
-        if color.lower() in color_pick_name:
-            color_code = color_pick_name[color.lower()]
+        if color.lower() in color_pick:
+            color_code = color_pick[color.lower()]
             r, g, b = hex_to_rgb(color_code)
 
             embed = discord.Embed(title = "Setting CheerLights to Color",
                 description=color.lower(),
                 colour=discord.Color.from_rgb(r,g,b)
             )
-            #await ctx.send(embed = embed)
 
             now = datetime.now()
             timestamp = now.strftime("%m/%d/%Y %H:%M:%S")
@@ -147,13 +137,12 @@ async def get_color(ctx, color = 'none'):
 
         else:
 
-            response = "That is an invalid color. Valid colors are:" + linefeed
-            response = response + valid_color_list
+            response = "That is an invalid color. Valid colors are:" + linefeed + linefeed
+            response = response + valid_colors()
 
             embed = discord.Embed(title = "Invalid CheerLights Color",
                 description=response
             )
-            #await ctx.send(embed = embed)
     await ctx.send(embed = embed)
 
 

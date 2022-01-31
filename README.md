@@ -99,8 +99,18 @@ cd cheerlights-discord-bot
 python3 cheerlights_bot.py
 ```
 
-It should say <bot Name> has connected to Discord. Once that is done, hit CTRL-A-D to disconnect from the screen session. If something ever happens, you can reconnect to the session by typing:
+It should say < Bot Name > has connected to Discord. Once that is done, hit CTRL-A-D to disconnect from the screen session. If something ever happens, you can reconnect to the session by typing:
 
 ```bash
 screen -R cheerlights-discord-bot
 ```
+
+---
+
+# Change Log
+
+- 01/30/2022 - Release 1.1
+  - Refined how the color picker works in the code
+  - Refined building the list of valid colors
+
+- 12/21/2021 - Initial Release 1.0
