@@ -2,8 +2,8 @@
 
 # CheerLights Discord Server Bot
 # Developed by: Jeff Lehman, N8ACL
-# Date: 01/30/2022
-# Current Version: 1.1
+# Date: 06/08/2022
+# Current Version: 3.0
 # https://github.com/cheerlights/cheerlights-discord-bot
 
 # Questions? Comments? Suggestions? Contact me one of the following ways:
@@ -15,26 +15,25 @@
 
 #############################
 # Import Libraries
-import config
+import config as cfg
 import os
 import json
 import requests
-import discord
+import discord # Discord library
 import tweepy
 from datetime import datetime, date, time, timedelta
 from tweepy import OAuthHandler
-from discord.ext import commands
 
 
 #############################
 # Create Discord Bot
-TOKEN = config.discord_bot_token
-bot = commands.Bot(command_prefix='/', help_command = None)
+TOKEN = cfg.discord['bot_token']
+bot = discord.Bot(debug_guilds=[cfg.discord['server_id']])
 
 #############################
 # Twitter API Object Configuration
-auth = OAuthHandler(config.twitterkeys["consumer_key"], config.twitterkeys["consumer_secret"])
-auth.set_access_token(config.twitterkeys["access_token"], config.twitterkeys["access_secret"])
+auth = OAuthHandler(cfg.twitterkeys["consumer_key"], cfg.twitterkeys["consumer_secret"])
+auth.set_access_token(cfg.twitterkeys["access_token"], cfg.twitterkeys["access_secret"])
 
 twitter = tweepy.API(auth)
 
@@ -99,69 +98,77 @@ def valid_colors():
 async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
 
-@bot.command(name='cheerlights')
-async def get_color(ctx, color = 'none'):
-    
-    if color == 'none':
-        color_code = use_api()
-        r, g, b = hex_to_rgb(color_code)
+@bot.command(description="Returns Current Color")
+async def get_color(ctx):
+    color_code = use_api()
+    #r, g, b = hex_to_rgb(color_code)
 
-        embed = discord.Embed(title = "Current CheerLights Color",
-            description= get_key(color_code.upper(),color_pick),
-            colour=discord.Color.from_rgb(r,g,b)
+    embed = discord.Embed(title = "Current CheerLights Color",
+    description=get_key(color_code.upper(),color_pick),
+    color=int(color_code.lstrip('#'), 16)
+    )
+
+    await ctx.respond(embed = embed,ephemeral=True)
+
+@bot.command(description="Returns List of Valid colors")
+async def color_list(ctx):
+
+    embed = discord.Embed(title = "Valid CheerLights Colors",
+    description=valid_colors()
+    )
+
+    await ctx.respond(embed = embed,ephemeral=True)
+
+@bot.command(description="Sets CheerLights to Specificed <color>")    
+async def set_color(ctx, color):
+    if color.lower() in color_pick:
+        color_code = color_pick[color.lower()]
+        #r, g, b = hex_to_rgb(color_code)
+
+        embed = discord.Embed(title = "Setting CheerLights to Color",
+            description=color.lower(),
+            color=int(color_code.lstrip('#'), 16)
         )
 
-    elif color == 'list':
+        now = datetime.now()
+        timestamp = now.strftime("%m/%d/%Y %H:%M:%S")
 
-        embed = discord.Embed(title = "Valid CheerLights Colors",
-        description=valid_colors()
-        )
+        status = "Set @CheerLights to " + color + " on " + timestamp
+
+        #print(status)
+        twitter.update_status(status)
 
     else:
-        if color.lower() in color_pick:
-            color_code = color_pick[color.lower()]
-            r, g, b = hex_to_rgb(color_code)
 
-            embed = discord.Embed(title = "Setting CheerLights to Color",
-                description=color.lower(),
-                colour=discord.Color.from_rgb(r,g,b)
-            )
+        response = "That is an invalid color. Valid colors are:" + linefeed + linefeed
+        response = response + valid_colors()
 
-            now = datetime.now()
-            timestamp = now.strftime("%m/%d/%Y %H:%M:%S")
-
-            status = "Set @CheerLights to " + color + " on " + timestamp
-
-            print(status)
-            twitter.update_status(status)
-
-        else:
-
-            response = "That is an invalid color. Valid colors are:" + linefeed + linefeed
-            response = response + valid_colors()
-
-            embed = discord.Embed(title = "Invalid CheerLights Color",
-                description=response
-            )
-    await ctx.send(embed = embed)
+        embed = discord.Embed(title = "Invalid CheerLights Color",
+            description=response
+        )
+    await ctx.respond(embed = embed,ephemeral=True)
 
 
-@bot.command(name='help')
+@bot.command(description="Help Text")
 async def help(ctx):
 
     cmd_list = """
     /cheerlights - Returns the current CheerLights Color.
 
-    /cheerlights <color> - Set CheerLights to this <color>. ex: /cheerlights red
+    /set_color <color> - Set CheerLights to this <color>. ex: /set_color red
 
-    /cheerlights list - Lists the valid colors that can be used for CheerLights.
+    /list - Lists the valid colors that can be used for CheerLights.
+
+    /help - This help text.
+
+    More Information can be found at https://github.com/cheerlights/cheerlights-discord-bot
 
     """
 
     embed = discord.Embed(title = "CheerLights Bot Commands",
         description=cmd_list
     )
-    await ctx.send(embed = embed)
+    await ctx.respond(embed = embed,ephemeral=True)
 
 #############################
 # Main Program

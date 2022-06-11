@@ -1,4 +1,7 @@
-discord_bot_token = 'DISCORD_BOT_TOKEN_HERE'
+discord = {
+    "bot_token": 'DISCORD_BOT_TOKEN_HERE',
+    "server_id": 'DISCORD_SERVER_ID_HERE'
+}
 
 twitterkeys = {
     "consumer_key": "CONSUMER_KEY_HERE",
