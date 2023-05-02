@@ -1,3 +1,2 @@
 py-cord --pre
-tweepy
 requests

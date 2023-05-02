@@ -1,0 +1,7 @@
+{
+    "block_list":  [
+        {"userid": "USER ID HERE", "username": "USERNAME HERE"},
+        {"userid": "USER ID HERE", "username": "USERNAME HERE"}
+    ]
+
+}

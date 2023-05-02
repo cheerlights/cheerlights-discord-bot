@@ -1,22 +1,15 @@
 # CheerLights Discord Bot
 This bot was created for use in the CheerLights Discord Server.
 
-It will allow you to get the current color, set a new color and list valid colors.
+It will allow you to get the current color and set a new color.
 
 ---
 
 ## Bot Commands
 
-The following are the commands the bot will recognize.
+The bot uses a keyboard button interface to make life easier. 
 
-Since the bot uses the Slash Command interface now, you will need to select the commands in the list or hit enter once it is highlighted in the context menu in order to enter additional parameters.
-
-| Command | Description | Example |
-|---------|-------------|---------|
-|/get_color|Returns the current CheerLights color from the API|/get_color|
-|/set_color (color)| Sets the CheerLights color to the color specified|/set_color [hit enter] red|
-|/list | Returns list of valid CheerLights Colors|/list|
-|/help|Returns help text with all the commands and a link to this repo| /help|
+To invoke the bot use ```/cheerlights``` and then follow the onscreen button prompts
 
 ## Installation/Setup
 
@@ -31,13 +24,7 @@ If you want to run this on a Windows or Mac machine, you will need to install Py
 
 #### Obtaining API Keys
 
-The first step in this process will be obtaining the API keys that you need. Some of the services you choose to use may take a couple of days to approve the access to their API's, so you will want to start this step before installing the script. That way when you are done installing the script and are ready to configure, you have everything ready to go.
-
-###### Twitter
-
-You will need to create a new app and get a consumer key, consumer secret, access token and access secret for the account you are wanting to post to. You can get those keys from the Twitter development site. Here is a walk through how: [Generate Twitter API Keys](https://www.slickremix.com/docs/how-to-get-api-keys-and-tokens-for-twitter/)
-
-Note that it takes a couple of days to get your app approved.
+The first step in this process will be obtaining the API keys that you need. 
 
 ###### Discord
 
@@ -48,7 +35,7 @@ Note that it takes a couple of days to get your app approved.
 * Click the ```bot``` selection under settings
 * Click ```Add Bot```
 * Give it a Name (I used the same name )
-* Then Copy the Bot Token (you will need this for the config.py part of the script along with the Twitter keys)
+* Then Copy the Bot Token (you will need this for the ```config.json``` part of the script)
 * Turn off ```Public Bot```
 * Make sure to turn on the ```Message Intents``` Setting under ```Privileged Gateway Intents```.
 * Save Settings
@@ -70,9 +57,9 @@ Note that it takes a couple of days to get your app approved.
 * It should pop into the server.
 * Next you will need to get your server id.
   * To get this, you will need to, on Discord, go into ```User Settings```->```Advanced``` and turn on ```Developer Mode``` (if it is not already on.)
-  * Then just right click on your server's icon and click ```Copy ID```. Then go back into your ```config.py``` and paste that ID in the ```server_id``` field.
+  * Then just right click on your server's icon and click ```Copy ID```. Then go back into your ```config.json``` and paste that ID in the ```server_id``` field.
 
-Once you have the keys you need, you will eventually copy them into the appropriate places in the config.py file, but now we need to get the files and get things installed.
+Once you have the keys you need, you will eventually copy them into the appropriate places in the ```config.json``` file, but now we need to get the files and get things installed.
 
 
 #### Installing the Script
@@ -98,12 +85,21 @@ pip3 install -r requirements.txt
 Now you have everything installed and are ready to configure the script.
 
 ### Configure the Script
-Once you have your API Keys, have cloned the repo and installed everything, you can now start configuring the bot. Open the config.py file in your editor of choice and copy in the keys you obtained from Twitter and Discord into the appropriate spots.
+Once you have your API Keys, have cloned the repo and installed everything, you can now start configuring the bot. 
+
+Open the ```config.json``` file in your editor of choice and copy in the keys you obtained from Discord into the appropriate spots and save.
+
+Open the ```block_list.json``` file and remove the example rows. Leave the rest of the json structure, otherwise the program will error. See below on how to use the ```block_list.json``` file.
+
+You will also need a webhook to send the messages to.
 
 
 ### Running the Script
+Once you have the config file edited, the bot can be run 1 of two ways:
 
-Once you have the config file edited, start the bot by typing the following:
+#### From the console
+
+First you can run it in a screen session and let it run in the background:
 
 ```bash
 screen -R cheerlights-discord-bot
@@ -122,9 +118,53 @@ It should say < Bot Name > has connected to Discord. Once that is done, hit ```C
 screen -R cheerlights-discord-bot
 ```
 
+#### Running in Docker (Recommended)
+
+You can also run the bot in Docker. Make sure to have Docker installed and Docker-Compose installed.
+
+Next, create two folders in the location where you are going to run the bot from:
+* data
+* log
+
+Move the ```config.json``` and ```block_list.json``` files into the data folder (see below on how to use the block list).
+
+Next, edit the ```docker-compose.yaml``` file.
+
+Where it says 
+
+```yaml
+    volumes:
+      - <full path to bot folder>/log/:/app/log/
+      - <full path to bot folder>/data/config.json:/app/config.json
+      - <full path to bot folder>/data/block_list.json:/app/block_list.json
+```
+Change where it says ```<full path to bot folder>``` to the path of where you have the bot located. (Example: ```/pi/home/cheerlights-discord-bot```).
+
+Next run ```docker-compose build```
+
+Once the build is complete, you can then run ```docker-compose up -d```. This should start the bot and have it connect.
+
+### Block List
+
+The ```block_list.json``` file allows the bot administrator to block users from using the bot. When edits are made to this file, they are automatically picked up by the script, so there is no need to restart the script or the container.
+
+You will need to obtain the numeric userid of the user from Discord and copy it out.
+
+Then paste it into the ```userid``` field in the json file. The ```username``` is where you put the username. This is more for reference in case you need to know who all is on the block list and who can be removed, etc. 
+
+When a user is blocked, they will get a message in Discord that tells them they are blocked and will need to contact the bot administrator as to why and if they can be removed. They will not be able to use the interface when blocked.
+
 ---
 
 ## Change Log
+
+- 05/02/2023 - Release 6.0
+  - Addition of block list
+  - Addition of logging
+  - Removal of Twitter usage
+  - Changed config.py to config.json
+  - Moved from text commands to onscreen button interface
+  - Updates to README.md
 
 - 06/10/2022 - Release 3.0
   - Moved the commands interface to the new slash commands interface.
