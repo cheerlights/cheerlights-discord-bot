@@ -1,0 +1,23 @@
+{
+    "logging_enabled" : true,
+    "msg_wait_time": 30,
+    "button_timeout": 15,
+    "discord": {
+        "bot_token": "DISCORD BOT TOKEN",
+        "server_id": "DISCORD SERVER ID"
+        },
+
+    "cl_wh": "CL WEBHOOK HERE",
+    "wh_user": "WEBHOOK USER NAME",
+    "wh_password": "WEBHOOK PASSWORD",
+
+    "database": {
+    "rdbms_type": "mssql",
+    "credentials": {
+      "username": "SQL USER NAME",
+      "password": "SQL PASSWORD",
+      "host": "HOST ADDRESS",
+      "db": "LOGGING DB NAME"
+    }
+  }
+}

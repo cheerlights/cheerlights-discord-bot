@@ -10,7 +10,7 @@
 
 # Questions? Comments? Suggestions? Contact me one of the following ways:
 # E-mail: n8acl@qsl.net
-# Discord: Ravendos
+# Discord: Ravendos#7364
 # Mastodon: @n8acl@mastodon.radio
 # Website: https://www.qsl.net/n8acl
 
@@ -23,12 +23,30 @@ import requests
 import discord # Discord library
 from datetime import datetime, date, time, timedelta
 import time
+import sqlalchemy
+from sqlalchemy import text as sqltext, select, MetaData, Table, update, insert
+
+if os.path.exists('src'):
+   # Import our Custom Libraries
+   import src.db_functions as dbf
+   import src.db_conn as dbc
+else:
+	#set the parent directory one level up and then import the src files
+   current_dir = os.path.dirname(os.path.abspath(__file__))
+   parent_dir = os.path.abspath(os.path.join(current_dir, ".."))
+   sys.path.insert(0, parent_dir)  
+
+   import src.db_functions as dbf
+   import src.db_conn as dbc 
 
 #############################
 # import config json file
 
-with open("config.json", "r") as read_file:
+config_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), '.', 'config.json'))
+
+with open(config_file, "r") as read_file:
     config = json.load(read_file)
+read_file.close()
 
 #############################
 # Create Discord Bot
@@ -37,13 +55,28 @@ activity = discord.Activity(type=discord.ActivityType.listening, name='/cheerlig
 bot = discord.Bot(debug_guilds=[config['discord']['server_id']], activity=activity, status=discord.Status.online)
 
 #############################
+# set database connection
+
+try:
+    db_engine = dbc.db_connection()
+    print("Database Connection established")
+
+except Exception as e:
+    print("Database Connection could not be established.", e)
+
+metadata = sqlalchemy.MetaData()
+metadata.reflect(bind=db_engine)
+
+cheerlights_log = metadata.tables['cheerlights_logs']
+
+#############################
 # Define Variables
 # DO NOT CHANGE BELOW
 
 cheerlights_api_url = 'http://api.thingspeak.com/channels/1417/field/2/last.json'
 linefeed = "\r\n"
 rate_limiter = {}
-button_timeout = 5
+button_timeout = config['button_timeout']
 
 color_pick = {
     "red" : "#FF0000",
@@ -99,13 +132,27 @@ def send_to_webhook(msg,wh_url):
         auth = (config['wh_user'],config['wh_password'])
     )
 
-def logging(log_message):
-    today = date.today()
-    bot_log_file = os.path.dirname(os.path.abspath(__file__)) + "/log/cheerlights_bot_log-" + today.strftime("%m%d%Y") + ".txt"
+# def logging(log_message):
+#     today = date.today()
+#     bot_log_file = os.path.abspath(os.path.join(os.path.dirname( __file__ ), './log/', 'cheerlights_bot_log-' + today.strftime("%m%d%Y") + ".txt"))
+#     # bot_log_file = os.path.dirname(os.path.abspath(__file__)) + "/log/cheerlights_bot_log-" + today.strftime("%m%d%Y") + ".txt"
 
-    with open(bot_log_file,"a") as f:
-        f.write(log_message)
-    f.close()
+#     with open(bot_log_file,"a") as f:
+#         f.write(log_message)
+#     f.close()
+
+def logging(log_message, author, user_id, color):
+
+    sql = cheerlights_log.insert()
+    values_list = [{
+        'application': 'discord',
+        'username' : author,
+        'userid': user_id,
+        'message': log_message,
+        'color': color}]
+
+    dbf.insert_sql(db_engine,sql,values_list)
+
 
 def get_block_list():
 
@@ -149,7 +196,9 @@ def set_color(color, author, user_id):
             send_to_webhook(cl_msg, config['cl_wh'])
 
             if config['logging_enabled']:
-                logging(timestamp + " - " + author + "(" + user_id + ") | command: set_color | status: " + status + linefeed)
+                # logging(timestamp + " - " + author + "(" + user_id + ") | command: set_color | status: " + status + linefeed)
+                log_message = "command: set_color | status: " + status
+                logging(log_message, author, user_id,color.lower())
 
         else:
             response = "Slow down there sport! You are trying to send colors way too fast. Please wait "+ str(config['msg_wait_time']) + " seconds before trying again."
@@ -162,7 +211,9 @@ def set_color(color, author, user_id):
         now = datetime.now()
         timestamp = now.strftime("%m/%d/%Y %H:%M:%S")
         if config['logging_enabled']:
-            logging(timestamp + " - " + author + "(" + author + ") | User Blocked" + linefeed)
+            # logging(timestamp + " - " + author + "(" + author + ") | User Blocked" + linefeed)
+            log_message = "User Blocked"
+            logging(log_message, author, user_id,'')
 
         response = "Sorry, but this user has been blocked from sending colors due to spamming. If this is in error, please contact an Admin."
 
@@ -177,10 +228,9 @@ def set_color(color, author, user_id):
 
 class ColorSelect(discord.ui.View):
 
-    async def on_timeout(self):
-        for child in self.children:
-            child.disabled = True
-        await self.message.edit(content="Set Color", view=self)
+    def __init__(self):
+        super().__init__(timeout=button_timeout, disable_on_timeout=True)
+
 
 
     @discord.ui.button(label="Red", row=0, style=discord.ButtonStyle.primary)
@@ -252,10 +302,8 @@ class ColorSelect(discord.ui.View):
 
 class MainMenu(discord.ui.View):
 
-    async def on_timeout(self):
-        for child in self.children:
-            child.disabled = True
-        await self.message.edit(content="CheerLight Commands", view=self)
+    def __init__(self):
+        super().__init__(timeout=button_timeout, disable_on_timeout=True)
 
 
     @discord.ui.button(label="Get Color", style=discord.ButtonStyle.primary)
@@ -268,11 +316,16 @@ class MainMenu(discord.ui.View):
         color=int(color_code.lstrip('#'), 16)
         )
 
+        if config['logging_enabled']:
+            # logging(timestamp + " - " + author + "(" + author + ") | User Blocked" + linefeed)
+            log_message = "Get Color"
+            logging(log_message, author, user_id,'')
+
         await interaction.response.send_message(embed=embed,ephemeral = True)
 
     @discord.ui.button(label="Set Color", style=discord.ButtonStyle.primary)
     async def set_color(self, button, interaction):
-        await interaction.response.send_message("Set Color", view = ColorSelect(timeout = button_timeout), ephemeral = True)
+        await interaction.response.send_message("Set Color", view = ColorSelect(), ephemeral = True)
 
 #############################
 # Define Discord Bot Functions
@@ -283,7 +336,7 @@ async def on_ready():
 
 @bot.slash_command()
 async def cheerlights(ctx):
-    await ctx.respond("CheerLight Commands", view=MainMenu(timeout= button_timeout), ephemeral = True)
+    await ctx.respond("CheerLight Commands", view=MainMenu(), ephemeral = True)
 
 #############################
 # Main Program

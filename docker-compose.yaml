@@ -5,7 +5,6 @@ services:
     build: .
     container_name: cheerlights_discordbot
     volumes:
-      - <full path to bot folder>/log/:/app/log/
-      - <full path to bot folder>/data/config.json:/app/config.json
-      - <full path to bot folder>/data/block_list.json:/app/block_list.json
+      - /PATH/TO/cheerlights-discord-bot/data/config.json:/app/config.json
+      - /PATH/TO/cheerlights-discord-bot/data/block_list.json:/app/block_list.json
     restart: unless-stopped

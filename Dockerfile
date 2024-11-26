@@ -1,11 +1,14 @@
 FROM python:latest
 
 WORKDIR /app
-RUN mkdir -p /log
 
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt --break-system-packages
 
-COPY . .
+add src /app/src
+
+COPY cheerlights_bot.py .
+
+RUN chmod +x cheerlights_bot.py
 
 CMD ./cheerlights_bot.py

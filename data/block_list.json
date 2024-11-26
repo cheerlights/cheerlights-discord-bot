@@ -1,0 +1,9 @@
+{
+    "block_list":  [
+        {"userid": "user_id_of_first_user", "username": "user_name_of_first_user"},
+        {"userid": "user_id_of_second_user", "username": "user_name_of_second_user"}
+
+
+    ]
+
+}
